@@ -1,0 +1,52 @@
+---
+title: "Cyclistic Data Analysis"
+author: "Estifanos"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+# Introduction
+
+This project analyzes Cyclistic bike-share data in Chicago. The goal is to compare how casual riders and annual members use the service differently and help guide marketing strategies.
+
+# Install Required Packages
+
+```{r}
+install.packages("tidyverse")
+install.packages("lubridate")
+install.packages("skimr")
+install.packages("dplyr")
+install.packages("readr")
+```
+
+# Load Required Packages
+```{r}
+library(tidyverse)
+library(lubridate)
+library(skimr)
+library(dplyr)
+library(readr)
+```
+
+#Data Loading and Combining
+```{r}
+# Load and combine datasets
+df01 <- read.csv("202309-divvy-tripdata.csv")
+# Load other datasets similarly...
+combined_data <- rbind(df01, df02, df03, ..., df12)
+```
+
+#Data Cleaning
+```{r}
+# Convert dates, add ride_length, and day_of_week columns
+combined_data <- combined_data %>%
+  mutate(started_at = as.POSIXct(started_at, format = "%Y-%m-%d %H:%M:%S"),
+         ended_at = as.POSIXct(ended_at, format = "%Y-%m-%d %H:%M:%S"),
+         ride_length = as.numeric(difftime(ended_at, started_at, units = "mins")),
+         day_of_week = wday(started_at, label = FALSE)) %>%
+  filter(ride_length > 0)
+
+# Remove duplicates and handle missing station names
+combined_data <- combined_data %>% distinct() %>% select(-ride_id, -start_station_id, -end_station_id)
+write_csv(combined_data, "cleaned_cyclistic_dataset.csv")
+```
