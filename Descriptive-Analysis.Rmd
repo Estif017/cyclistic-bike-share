@@ -1,0 +1,194 @@
+---
+title: "Descriptive Analysis"
+author: "Estifanos"
+date: "2024-09-13"
+output: html_document
+---
+
+# Introduction
+
+This report presents a detailed **descriptive analysis** of Cyclistic bike-share data. I explored various metrics such as average ride length, maximum and minimum ride durations, and user behavior by month, season, and time of day. The insights will be useful for understanding bike usage patterns among members and casual riders.
+
+------------------------------------------------------------------------
+
+## 1. Descriptive Statistics for Ride Length
+
+I begin by calculating key descriptive statistics for the variable `ride_length`:
+
+```{r descriptive-analysis}
+# Mean of ride_length
+mean_ride_length <- mean(combined_data$ride_length, na.rm = TRUE)
+mean_ride_length
+
+# Maximum ride_length
+max_ride_length <- max(combined_data$ride_length, na.rm = TRUE)
+max_ride_length
+
+# Minimum ride_length
+min_ride_length <- min(combined_data$ride_length, na.rm = TRUE)
+min_ride_length
+```
+
+-   **Mean Ride Length**: The average duration for a ride.\
+-   **Max Ride Length**: The longest ride duration recorded.\
+-   **Min Ride Length**: The shortest ride duration recorded.
+
+## 2. Mode of Ride Day (Day of the Week)
+
+I also identify which day of the week has the highest number of rides (i.e., the mode):
+
+```{r}
+# Function to calculate the mode
+get_mode <- function(v) {
+  uniq_vals <- unique(v)
+  uniq_vals[which.max(tabulate(match(v, uniq_vals)))]
+}
+
+# Mode of day_of_week
+mode_day_of_week <- get_mode(combined_data$day_of_week)
+mode_day_of_week
+
+```
+
+-   **Mode Day of the Week**: The most frequent day on which rides occur.\
+
+## 3. Monthly Analysis of Ride Length and Count
+
+Next, analyze the monthly variation in ride length and ride count to understand seasonal trends:
+
+### 3.1 Average Ride Length by Month
+
+```{r}
+# Add Month column
+combined_data <- combined_data %>%
+  mutate(month = month(started_at, label = TRUE, abbr = TRUE))
+
+# Calculate Average Ride Length by Month
+avg_ride_length_by_month <- combined_data %>%
+  group_by(month) %>%
+  summarize(avg_ride_length = mean(ride_length, na.rm = TRUE))
+
+avg_ride_length_by_month <- combined_data %>%
+  group_by(month) %>%
+  summarize(avg_ride_length = mean(ride_length, na.rm = TRUE))
+avg_ride_length_by_month
+```
+
+### 3.2 Ride Count by Month
+
+```{r}
+# Count Rides by Month
+ride_count_by_month <- combined_data %>%
+  group_by(month) %>%
+  summarize(count_of_rides = n())
+
+ride_count_by_month
+
+```
+
+-   **Average Ride Length by Month**: Shows how ride durations vary across different months.
+-   **Ride Count by Month**: Displays the total number of rides for each month.
+
+## 4. Seasonal Analysis
+
+Examine the average ride length and ride count by season to gain insights into usage patterns across the year.
+
+### 4.1 Average Ride Length by Season
+
+```{r}
+# Add Season column
+combined_data <- combined_data %>%
+  mutate(season = case_when(
+    month(started_at) %in% c(12, 1, 2) ~ "Winter",
+    month(started_at) %in% c(3, 4, 5) ~ "Spring",
+    month(started_at) %in% c(6, 7, 8) ~ "Summer",
+    month(started_at) %in% c(9, 10, 11) ~ "Fall"
+  ))
+
+# Calculate Average Ride Length by Season
+avg_ride_length_by_season <- combined_data %>%
+  group_by(season) %>%
+  summarize(avg_ride_length = mean(ride_length, na.rm = TRUE))
+
+avg_ride_length_by_season
+```
+
+### 4.2 Ride Count by Season
+
+```{r}
+# Count Rides by Season
+ride_count_by_season <- combined_data %>%
+  group_by(season) %>%
+  summarize(count_of_rides = n())
+
+ride_count_by_season
+```
+
+-   **Average Ride Length by Season**: This measures how average ride duration changes by season (Winter, Spring, Summer, Fall).
+-   **Ride Count by Season**: This shows the total number of rides for each season.
+
+## 5. Time of Day Analysis
+
+Analyze ride behavior based on the time of day to identify key patterns. We divide the day into:\
+\* **Morning**: 6 AM - 12 PM\
+\* **Afternoon**: 12 PM - 6 PM\
+\* **Evening**: 6 PM - 12 AM\
+\* **Night**: 12 AM - 6 AM\
+
+### 5.1 Average Ride Length by Time of Day
+
+```{r}
+# Load necessary library for date-time manipulation
+library(lubridate)
+
+# Convert started_at to a proper datetime format and then extract the hour in the local time zone
+combined_data$started_at <- ymd_hms(combined_data$started_at)
+
+# Extract hour
+combined_data$hour <- hour(combined_data$started_at)
+
+# Add Time of Day column based on the extracted hour
+combined_data <- combined_data %>%
+  mutate(time_of_day = case_when(
+    hour >= 6 & hour < 12 ~ "Morning",
+    hour >= 12 & hour < 18 ~ "Afternoon",
+    hour >= 18 & hour < 24 ~ "Evening",
+    TRUE ~ "Night"
+  ))
+
+# Calculate Average Ride Length by Time of Day
+avg_ride_length_by_time_of_day <- combined_data %>%
+  group_by(time_of_day) %>%
+  summarize(avg_ride_length = mean(ride_length, na.rm = TRUE))
+
+avg_ride_length_by_time_of_day
+
+```
+
+### 5.2 Ride Count by Time of Day
+```{r}
+# Count Rides by Time of Day
+ride_count_by_time_of_day <- combined_data %>%
+  group_by(time_of_day) %>%
+  summarize(count_of_rides = n())
+
+ride_count_by_time_of_day
+```
+
+## 6. Exporting Summary Data
+```{r}
+# Save Monthly Analysis
+write_csv(avg_ride_length_by_month, "monthly_avg_ride_length.csv")
+write_csv(ride_count_by_month, "monthly_ride_count.csv")
+
+# Save Seasonal Analysis
+write_csv(avg_ride_length_by_season, "seasonal_avg_ride_length.csv")
+write_csv(ride_count_by_season, "seasonal_ride_count.csv")
+
+# Save Time of Day Analysis
+write_csv(avg_ride_length_by_time_of_day, "time_of_day_avg_ride_length.csv")
+write_csv(ride_count_by_time_of_day, "time_of_day_ride_count.csv")
+
+```
+
+
